@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>pong</title>
+
+	<script type="text/javascript">
+
+	window.onload = function() {
+		let canvas = document.getElementById('gt');
+		let ctx = canvas.getContext('2d');
+
+		let width = 400;
+		let height = 400;
+
+		canvas.width  = width;
+		canvas.height = height;
+
+		let paddle_height = 80;
+		let paddle_width  = 20;
+
+		let paddle1    = [30, 200];
+		let paddle2    = [400-30, 200];
+		let paddle2_ai = 0;
+
+		let ball     = [200, 200];
+		let ball_vel = [-1.5 + Math.random()*3, -1 + Math.random()*2];
+
+		let player1_score = 0;
+		let player2_score = 0;
+
+		let keys = {};
+
+		window.onkeydown = function(evt) {
+			keys[evt.key] = true;
+		}
+
+		window.onkeyup = function(evt) {
+			keys[evt.key] = false;
+		}
+
+		function collision(r1, r2) {
+			if ( r1[0] > r2[0] + r2[2] ) return false;
+			if ( r1[1] > r2[1] + r2[3] ) return false;
+			if ( r1[0] + r1[2] < r2[0] ) return false;
+			if ( r1[1] + r1[3] < r2[1] ) return false;
+			return true;
+		}
+
+		let last_update = + new Date();
+		function updateAndRender() {
+
+			let current_time = + new Date();
+
+			if ( keys['w'] ) {
+				if ( paddle1[1] - 2 > 0 )
+					paddle1[1] -= 2;
+			}
+			else if ( keys['s'] ) {
+				if ( paddle1[1] + 2 < height )
+					paddle1[1] += 2;
+			}
+
+			ball[0] += ball_vel[0];
+			ball[1] += ball_vel[1];
+
+			if ( ball[1] > height) {
+				ball[1] = height;
+				ball_vel[1] *= -1;
+			}
+			else if ( ball[1] < 0) {
+				ball[1] = 0;
+				ball_vel[1] *= -1;
+			}
+
+			if ( current_time - last_update >= 1000/2 ) {
+				if ( ball[1] > paddle2[1] ) {
+					paddle2_ai = 2;
+				}
+				else { 
+					paddle2_ai = -2;
+				}
+				last_update = current_time;
+			}
+
+			paddle2[1] += paddle2_ai;
+
+			if ( ball[0] < 0 ) {
+				player2_score += 1;
+				ball = [200, 200];
+				ball_vel = [-2 + Math.random()*4, -1 + Math.random()*2];
+			}
+
+			if ( ball[0] > width ) {
+				player1_score += 1;
+				ball = [200, 200];
+				ball_vel = [-1.5 + Math.random()*3, -1 + Math.random()*2];
+			}
+
+			if ( collision([paddle1[0] - paddle_width/2, paddle1[1] - paddle_height/2, paddle_width, paddle_height],
+						   [ball[0] - 5, ball[1] -5, 10, 10]) ) {
+				ball_vel[0] *= -1;
+				ball_vel[0] += 0.5;
+
+				// ball_vel[1] += ( paddle1[1] + paddle_height/2 ) - ball[1] / 100;
+			}
+			else if ( collision([paddle2[0] - paddle_width/2, paddle2[1] - paddle_height/2, paddle_width, paddle_height],
+						        [ball[0] - 5, ball[1] -5, 10, 10]) ) {
+				ball_vel[0] *= -1;
+				ball_vel[0] -= 0.5;
+
+				 // ball_vel[1] += ( paddle2[1] + paddle_height/2 ) - ball[1] / 100;
+			}
+
+			ctx.fillStyle = "#111";
+			ctx.fillRect(0, 0, width, height);
+
+			ctx.fillStyle = "#BBB";
+			ctx.font = "30px Monospace";
+			ctx.fillText(player1_score.toString(), 100, 200);
+			ctx.fillText(player2_score.toString(), 300, 200);
+
+			ctx.fillRect(paddle1[0] - paddle_width/2,
+			             paddle1[1] - paddle_height/2,
+			             paddle_width,
+			             paddle_height);
+
+			ctx.fillRect(paddle2[0] - paddle_width/2,
+			             paddle2[1] - paddle_height/2,
+			             paddle_width,
+			             paddle_height);
+
+			ctx.fillRect(ball[0] - 5, ball[1] - 5, 10, 10);
+
+			requestAnimationFrame(updateAndRender);
+		}
+
+		updateAndRender();
+	}
+
+	</script>
+</head>
+<body>
+<canvas id='gt'></canvas>
+</body>
+</html>
